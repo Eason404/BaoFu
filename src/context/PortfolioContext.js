@@ -126,6 +126,12 @@ export const PortfolioProvider = ({ children }) => {
           account.positions = [];
         }
 
+        // Calculate trade cost (negative for buys, positive for sells)
+        const tradeCost = -(quantity * price);
+        
+        // Update cash balance
+        account.cashBalance = (account.cashBalance || 0) + tradeCost;
+
         // Find existing position for the symbol
         const existingPosition = account.positions.find(pos => 
           pos.symbol === symbol && pos.type === type
@@ -133,14 +139,23 @@ export const PortfolioProvider = ({ children }) => {
 
         if (existingPosition) {
           // Update existing position
-          const totalValue = existingPosition.quantity * existingPosition.currentPrice;
           const newQuantity = existingPosition.quantity + quantity;
-          const newTotalValue = totalValue + (quantity * price);
           
-          existingPosition.quantity = newQuantity;
-          existingPosition.currentPrice = newTotalValue / newQuantity;
-          existingPosition.lastUpdated = date;
-        } else {
+          if (newQuantity === 0) {
+            // Remove position if quantity becomes zero
+            account.positions = account.positions.filter(pos => 
+              pos.symbol !== symbol || pos.type !== type
+            );
+          } else {
+            // Update position with new average price
+            const oldValue = existingPosition.quantity * existingPosition.costBasis;
+            const newValue = quantity * price;
+            existingPosition.quantity = newQuantity;
+            existingPosition.costBasis = Math.abs((oldValue + newValue) / newQuantity);
+            existingPosition.currentPrice = price;
+            existingPosition.lastUpdated = date;
+          }
+        } else if (quantity !== 0) {
           // Add new position
           account.positions.push({
             symbol,
@@ -154,11 +169,25 @@ export const PortfolioProvider = ({ children }) => {
         }
 
         // Update account total value
-        account.totalValue = (account.positions || []).reduce((total, position) => {
+        const positionsValue = (account.positions || []).reduce((total, position) => {
           const positionValue = position.quantity * position.currentPrice * 
             (position.type === 'option' ? (position.contractMultiplier || 100) : 1);
           return total + positionValue;
         }, 0);
+
+        account.totalValue = positionsValue + account.cashBalance;
+
+        // Update allocation percentages
+        const stockValue = account.positions.reduce((sum, position) => 
+          position.type === 'stock' ? sum + (position.quantity * position.currentPrice) : sum, 0);
+        const optionValue = account.positions.reduce((sum, position) => 
+          position.type === 'option' ? sum + (position.quantity * position.currentPrice * (position.contractMultiplier || 100)) : sum, 0);
+
+        account.allocation = {
+          stocks: Math.round((stockValue / account.totalValue) * 100),
+          options: Math.round((optionValue / account.totalValue) * 100),
+          cash: Math.round((account.cashBalance / account.totalValue) * 100)
+        };
 
         return updatedData;
       });

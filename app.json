@@ -7,9 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#007AFF"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -30,23 +28,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font"
-    ],
     "description": "BaoFu - Your Personal Portfolio Management App",
-    "githubUrl": "",
-    "privacy": "unlisted",
-    "updates": {
-      "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/719cf88f-3962-4828-b0c7-b0de50368e23"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "719cf88f-3962-4828-b0c7-b0de50368e23"
-      }
-    }
+    "privacy": "unlisted"
   }
 }
